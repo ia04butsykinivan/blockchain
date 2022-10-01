@@ -9,16 +9,20 @@ class Blockchain(object):
 
         # Створення блоку генезису, де previous_hash - прізвище, а proof (nounce) - день,
         # місяць та рік народження.
-        self.new_block(previous_hash="butsykin", proof=4112002)
-
-    def new_block(self, proof, previous_hash=None):
-        block = {
-            'index': len(self.chain) + 1,
-            # 'timestamp': time(),
-            'transactions': self.current_transactions,
-            'proof': proof,
-            'previous_hash': previous_hash or self.hash(self.chain[-1]),
+        genesis_block = {
+            'index': 1,
+            'timestamp': time(),
+            'transactions': [],
+            'proof': 4112002,
+            'previous_hash': "butsykin",
         }
+
+        self.add_block(genesis_block)
+
+    def new_block(self):
+        block = self.proof_of_work()
+
+        self.add_block(block)
 
         return block
 
@@ -47,19 +51,20 @@ class Blockchain(object):
         return hashlib.sha256(block_string).hexdigest()
 
     def proof_of_work(self):
-        proof = 0
+        block = {
+            'index': len(self.chain) + 1,
+            'timestamp': time(),
+            'transactions': self.current_transactions,
+            'proof': 0,
+            'previous_hash': self.hash(self.chain[-1]),
+        }
 
-        while self.valid_proof(proof) is False:
-            proof += 1
+        while self.valid_proof(block) is False:
+            block['proof'] += 1
 
-        return proof
+        return block
 
-    # Умова валідності nounce полягає в тому, що хеш блоку має закінчуватися значенням 11.
-    # Для перевірки, створюємо новий блок та хешуємо його, але є проблема, що час змінюється
-    # для наступних блоків
-    def valid_proof(self, proof):
-        block = self.new_block(proof)
-
+    def valid_proof(self, block):
         # У якості підтвердження доказу перевіримо на наявність місяць народження у кінці хешу
         return self.hash(block)[len(self.hash(block))-2:] == "11"
 
@@ -68,8 +73,8 @@ class Blockchain(object):
 # Ствоюємо новий блокчейн:
 blockchain = Blockchain()
 
-proof = blockchain.proof_of_work()
-block = blockchain.new_block(proof)
+# Створюємо новий блок:
+block = blockchain.new_block()
 
 print()
 print("----------")
@@ -78,8 +83,7 @@ print("Previous hash:", block["previous_hash"])
 print("New hash: ", blockchain.hash(block))
 print("----------")
 
-proof = blockchain.proof_of_work()
-block = blockchain.new_block(proof)
+block = blockchain.new_block()
 
 print()
 print("----------")
