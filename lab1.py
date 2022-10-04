@@ -9,18 +9,11 @@ class Blockchain(object):
 
         # Створення блоку генезису, де previous_hash - прізвище, а proof (nounce) - день,
         # місяць та рік народження.
-        genesis_block = {
-            'index': 1,
-            'timestamp': time(),
-            'transactions': [],
-            'proof': 4112002,
-            'previous_hash': "butsykin",
-        }
 
-        self.add_block(genesis_block)
+        self.new_block("butsykin")
 
-    def new_block(self):
-        block = self.proof_of_work()
+    def new_block(self, previous_hash=None):
+        block = self.proof_of_work(previous_hash)
 
         self.add_block(block)
 
@@ -45,18 +38,22 @@ class Blockchain(object):
     def last_block(self):
         return self.chain[-1]
 
+    @property
+    def first_block(self):
+        return self.chain[0]
+
     @staticmethod
     def hash(block):
         block_string = json.dumps(block, sort_keys=True).encode()
         return hashlib.sha256(block_string).hexdigest()
 
-    def proof_of_work(self):
+    def proof_of_work(self, previous_hash=None):
         block = {
             'index': len(self.chain) + 1,
             'timestamp': time(),
             'transactions': self.current_transactions,
-            'proof': 0,
-            'previous_hash': self.hash(self.chain[-1]),
+            'proof': 4112002,
+            'previous_hash': previous_hash or self.hash(self.chain[-1]),
         }
 
         while self.valid_proof(block) is False:
@@ -76,6 +73,12 @@ blockchain = Blockchain()
 # Створюємо новий блок:
 block = blockchain.new_block()
 
+print()
+print("----------")
+print("Block 0")
+print("Previous hash:", blockchain.first_block["previous_hash"])
+print("New hash: ", blockchain.hash(blockchain.first_block))
+print("----------")
 print()
 print("----------")
 print("Block 1")
